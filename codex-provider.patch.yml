@@ -1,0 +1,4 @@
+# Register the provider once; each preset controls its own tools.
+- insert:
+    - id: subagent-codex
+      name: '@deepseek-ai/dsh-subagent-codex'

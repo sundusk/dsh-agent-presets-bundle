@@ -1,0 +1,35 @@
+{
+  "name": "@sundusk/dsh-agent-presets-bundle",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Codex 协作、鸿蒙、iOS、小说、逆向工程五合一预设",
+  "type": "module",
+  "exports": {
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "presets/",
+    "skills/",
+    "codex-provider.patch.yml",
+    "README.md"
+  ],
+  "dependencies": {
+    "@deepseek-ai/dsh-subagent-codex": "0.2.0-rc.2"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": [
+        "./codex-provider.patch.yml",
+        "./presets/codex.patch.yml",
+        "./presets/deveco.patch.yml",
+        "./presets/ios-senior.patch.yml",
+        "./presets/novel.patch.yml",
+        "./presets/rea.patch.yml"
+      ]
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sundusk/dsh-agent-presets-bundle.git"
+  }
+}

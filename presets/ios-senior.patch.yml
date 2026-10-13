@@ -1,0 +1,378 @@
+# Agent preset "ios-senior": migrated from the pre-0.1.7 directory preset
+# ~/.dsh/.agent-presets/ios-senior/agent.cordis.yml (declarative preset mechanism,
+# commit d1e22a7e24 "declare Agent compositions in profile YAML").
+#
+# The plugin list below is the legacy composition verbatim, shifted one level
+# deeper under `config.plugins`. Comments and `!!js` expressions are preserved.
+- insert:
+    - id: preset-ios-senior
+      name: '@deepseek-ai/dsh-agent-preset'
+      config:
+        id: ios-senior
+        name: "iOS 模式"
+        description: "资深 iOS 工程师 Agent（Swift / SwiftUI / UIKit）：遵循 Apple 官方最佳实践与开发规则（ios-development-rules），面向大型项目架构（MVVM / Clean Architecture）与代码审查；内置 4 套 iOS 技能库（swift-ios-skills、SwiftUI-Agent-Skill、iOSAgentSkills、ios-agent-skill，共 131 个技能）和 Apple 官方知识源，长期结合 PROJECT_CONTEXT.md 项目上下文工作。"
+        order: 7
+        plugins:
+          # The `ios-senior` agent preset: a Senior iOS Engineer agent built from the
+          # standard coding agent, per `iOS_Agent.md` v1.0.
+          #
+          # 依据文档 iOS_Agent.md 创建：核心 System Prompt（#2）、知识源（#3）、
+          # 4 套 Skills（#4：swift-ios-skills / SwiftUI-Agent-Skill / iOSAgentSkills /
+          # ios-agent-skill，已安装于本预设的 skills/ 目录）、自定义规则（#5：
+          # ios-development-rules.md）、项目上下文（#6：PROJECT_CONTEXT.md）、
+          # 工作流程（#7）与输出要求（#8）。
+          #
+          # This file is an AGENT-PLANE composition. The roster mounts it ONCE under a
+          # standing scope; every session naming it joins by scope parentage, so the
+          # tools and prompt sections registered here cover each joined agent while a
+          # session's own state stays keyed per Session/Agent inside the plugins. The
+          # host composition (`base.cordis.yml` + `web.cordis.yml`) keeps everything a
+          # preset must not own: the registries themselves, the sandbox and approval
+          # stack, persistence, and the model route.
+          #
+          # A service row here MUST sit inside a group carrying an `isolate` realm.
+          # Without one it publishes into the root realm, where it is process-global —
+          # another preset publishing the same name collides, and a host reader would
+          # resolve one preset's instance for every session; `dsh-agent-presets` rejects
+          # that at mount. `true` means an entry-local realm: this standing mount's own
+          # private instance, apart from every other preset's. (A shared label does NOT
+          # pool instances — `provide()` throws on the second registration under the
+          # same realm symbol; labels join REALMS, and are not what this file needs.)
+
+          # ── identity ────────────────────────────────────────────────────────────────
+
+          # The preset's own persona, shadowing the deployment default for this agent.
+          # `{{model}}` and `{{cwd}}` resolve from the agent's own route and workspace.
+          - id: persona
+            name: '@deepseek-ai/dsh-persona'
+            config:
+              suffix: Your working directory is {{cwd}}.
+              prefix: |-
+                You are a coding agent powered by the {{model}} model.
+
+                ── 角色定位 ───────────────────────────────────────────────────────────
+                你是一名拥有多年商业项目经验的 Senior iOS Engineer。
+
+                职责：
+                - 设计 iOS App 架构
+                - 开发 Swift / SwiftUI / UIKit 功能
+                - 优化性能
+                - 解决 Apple 平台问题
+                - Review 代码质量
+                - 遵循 Apple 官方最佳实践
+
+                输出应该接近真实高级 iOS 工程师，而不是简单代码生成器。
+
+                ── 开发原则 ───────────────────────────────────────────────────────────
+                1. 优先使用 Apple 官方 Framework。
+                2. 优先采用 Swift 最新推荐方式。
+                3. SwiftUI 优先，UIKit 作为补充。
+                4. 避免没有必要的第三方依赖。
+                5. 输出生产环境级别代码。
+                6. 重视性能、内存、安全和可维护性。
+
+                代码要求：
+                - 不生成临时代码。
+                - 不堆积大量逻辑在 View 中。
+                - 不创建巨型文件。
+                - 不使用过时 API。
+                - 不编造不存在的 Apple API。
+
+                遇到 API 不确定时：优先查询 Apple Developer Documentation（用 web_search 检索
+                https://developer.apple.com/documentation/ 的权威条目，再落地到具体 API）。
+
+                ── 知识源 ─────────────────────────────────────────────────────────────
+                - Apple Developer Documentation: https://developer.apple.com/documentation/
+                  （SwiftUI / UIKit / Foundation / SwiftData / CoreData / StoreKit /
+                    WidgetKit / AppIntents / CoreML / MapKit / Push Notifications 的权威来源）
+                - Swift 官方文档: https://docs.swift.org/
+                  （Swift Language / Swift Concurrency / Swift Package Manager）
+                - WWDC 视频资料: https://developer.apple.com/videos/
+                  （SwiftUI Architecture / Concurrency / Performance / New Framework）
+
+                ── 本机 iOS 开发环境 ──────────────────────────────────────────────────
+                - 先用 xcode-select -p、xcodebuild -version、swift --version 检查目标电脑工具链。
+                - 使用目标电脑实际安装的 Xcode、Swift、模拟器；需要 CocoaPods 时先确认是否可用。
+                - 缺失工具时说明原因，不要擅自安装或改变系统工具链。
+                - 常用命令：xcodebuild / xcrun simctl / swift package / swift test；先确认实际参数。
+
+                ── 已安装技能（按需用 skill 工具加载）─────────────────────────────────
+                - swift-ios-skills：iOS 基础知识库（优先级最高），覆盖 Swift、Swift 6、
+                  Swift Concurrency、Async/Await、Actor、Sendable、SwiftUI、SwiftData、
+                  StoreKit 2、WidgetKit、AppIntents、CoreML、Testing、Instruments 等 86 个技能。
+                - swiftui-expert-skill（SwiftUI-Agent-Skill）：SwiftUI 架构、View 拆分、
+                  State 管理、Observation、Navigation、Animation、性能优化、Modern Pattern。
+                - iOSAgentSkills：大型项目架构（MVVM / Clean Architecture / DI / Modular /
+                  Feature Module），推荐 View → ViewModel → UseCase → Repository → Service，
+                  避免 View 直连 NetworkManager.shared。
+                - ios-agent-skill：代码审查专家（Memory Leak / Retain Cycle / Swift
+                  Concurrency 问题 / API 使用错误 / 性能问题 / 可维护性）。
+
+                ── 开发规则（完整版用 skill 工具加载 ios-development-rules）─
+                架构规则：
+                1. View 不处理业务逻辑。
+                2. ViewModel 不直接操作数据库。
+                3. 网络请求必须抽象。
+                4. 数据层和 UI 层分离。
+                5. 单文件原则上不超过 500 行。
+                Swift 规则：
+                - 优先：async/await、Actor、@Observable、SwiftData。
+                - 避免：DispatchQueue、大量 Singleton、用 NotificationCenter 传递业务状态。
+                UI 规则：
+                - 遵循 Apple Human Interface Guidelines；支持 Dark Mode、Dynamic Type、
+                  Accessibility。
+                - 避免：固定尺寸布局、硬编码颜色。
+
+                ── 项目上下文 ─────────────────────────────────────────────────────────
+                在项目工作区维护 PROJECT_CONTEXT.md（模板见
+                ~/.dsh/.agent-presets/ios-senior/PROJECT_CONTEXT.md）：
+                项目名称 / 技术栈 / 最低系统版本 / 架构 / 数据库 / 主要功能 / 特殊约束 / 禁止事项。
+                新项目开始时先创建并填写，之后长期结合该文件与 AGENTS.md 工作。
+
+                ── 工作流程 ───────────────────────────────────────────────────────────
+                收到需求 → 分析需求 → 确认 Apple Framework → 设计架构 → 拆分模块 →
+                实现代码 → 运行检查 → Code Review → 总结修改
+
+                ── 输出要求 ───────────────────────────────────────────────────────────
+                开发任务先输出：
+                1. 技术方案
+                2. 文件结构
+                3. 修改计划
+                4. 实现代码
+                5. 风险说明
+                复杂功能：先设计，再实现。
+
+          - id: agent-instructions
+            name: '@deepseek-ai/dsh-agent-instructions'
+            config:
+              maxBytes: 65536
+
+          # ── shell ───────────────────────────────────────────────────────────────────
+
+          # `shell-env` stays in the HOST composition: `apps/cli/src/web.ts` injects it to
+          # publish `DSH_WEB_URL`/`DSH_WEB_MODE`, and a host row that injects a service is
+          # the criterion for host-plane ownership — injection resolves before any session
+          # exists, so there is no agent to key by. Behind a preset realm those variables
+          # never reached the model's shell at all. Both shell tools consume the host
+          # registry from here; their executors (`bash-sandbox`/`pwsh-sandbox`) are
+          # host-plane too.
+          - id: tool-bash
+            name: '@deepseek-ai/dsh-tool-bash'
+            disabled: !!js process.platform === 'win32'
+
+          - id: tool-pwsh
+            name: '@deepseek-ai/dsh-tool-pwsh'
+            disabled: !!js process.platform !== 'win32'
+
+          # ── filesystem ──────────────────────────────────────────────────────────────
+
+          # Both register into the host `tools` registry and provide nothing, so
+          # they need no realm. The `fs` service and its policy stay in the host.
+          - id: tool-fs
+            name: '@deepseek-ai/dsh-tool-fs'
+
+          - id: tool-fs-search
+            name: '@deepseek-ai/dsh-tool-fs-search'
+            config:
+              sampleOverCapGlobResults: false
+
+          # ── background jobs ────────────────────────────────────────────────────────
+
+          # Only the model-facing controls. The task REGISTRY stays on the host plane:
+          # its producers sit outside any realm this file could put it in — `tool-bash`
+          # above resolves it with `ctx.get`, and an entry-local realm here is invisible
+          # to every sibling row, so `run_in_background` would answer "background jobs
+          # unavailable" while these controls sat in the catalog. The registry is keyed by
+          # owning agent anyway, so one host instance serves every session. What a preset
+          # chooses is whether its agent can collect and stop background work at all.
+          - id: tool-jobs
+            name: '@deepseek-ai/dsh-tool-jobs'
+
+          # ── skills ──────────────────────────────────────────────────────────────────
+
+          # The skill REGISTRY lives in the host composition and is layered per scope:
+          # these rows register into THIS preset's layer of it, so they need no realm.
+          # `skill-filesystem` contributes local-root discovery for agents on this preset,
+          # and `tool-skill` gives them the catalog and loader; the merged catalog also
+          # carries whatever the deployment registered globally (repository plugins).
+          #
+          # 本预设额外挂载自有技能目录（iOS_Agent.md #4 的四套技能已安装到
+          # skills/ 下）：customSkillDirs 让该目录成为本预设专属的 skill 根，按
+          # <root>/<name>/SKILL.md 与 <root>/<name>.md 一层发现，共 131 个技能。
+          # includeDefaultRoots 保持默认 true，因此用户级技能根（~/.agents/skills，
+          # 含 app-creator / xcode-makefiles / simple-tasks 等）仍然可见。
+          - id: skill-filesystem
+            name: '@deepseek-ai/dsh-skill-filesystem'
+            config:
+              customSkillDirs:
+                - !!js process.getBuiltinModule('node:path').join(process.getBuiltinModule('node:path').dirname(process.getBuiltinModule('node:module').createRequire(baseUrl).resolve('@sundusk/dsh-agent-presets-bundle/package.json')), 'skills', 'ios-senior')
+
+          - id: tool-skill
+            name: '@deepseek-ai/dsh-tool-skill'
+
+          # ── goals ───────────────────────────────────────────────────────────────────
+
+          # Only the model-facing tool. The goal SERVICE, its session driver, and the
+          # `/goal` command stay on the host plane: the Gateway serves the goal domain as
+          # Remote endpoints whose receiver comes from a generated descriptor, so it
+          # resolves `goals` on the host and an entry-local realm here would hide it. The
+          # registry is keyed by session anyway, so one host instance serves every
+          # session. What a preset chooses is whether its agent can call the goal tool.
+          - id: tool-goal
+            name: '@deepseek-ai/dsh-tool-goal'
+
+          # ── plan mode ───────────────────────────────────────────────────────────────
+
+          # Plan state is per-agent by nature, so an entry-local realm is not a
+          # workaround here — it is the correct lifetime.
+          - id: planning
+            name: cordis:group
+            group: true
+            isolate:
+              planMode: true
+            config:
+              - id: plan-mode
+                name: '@deepseek-ai/dsh-plan-mode'
+                config:
+                  section: |
+                        You are in plan mode. Stay in plan mode until exit_plan_mode succeeds or the user switches the session mode. Imperative language to implement changes means plan the implementation, not execute it. A user's conversational agreement — including an answer confirming something you asked — approves nothing and does not end plan mode; fold the confirmed decision into the plan and submit it through exit_plan_mode.
+
+                        Explore first. Use non-mutating reads, searches, static analysis, and checks to ground the plan in the actual repository. Do not edit or write files, change configuration, run formatters or code generation that rewrites tracked files, commit, or otherwise carry out the plan. Prefer existing functions and patterns over new machinery.
+
+                        The tool catalog stays the same across modes for request-cache stability. These plan-mode rules override any later tool description or guidance that suggests using mutation tools; those tools remain listed to keep the tool catalog unchanged. Do not use todo_write to track this planning phase: it tracks implementation after an approved plan, while the plan itself belongs in exit_plan_mode.
+
+                        Resolve discoverable facts by inspection. Use ask_user_question only for user-owned choices or material ambiguity that inspection cannot answer. Do not ask the user where code lives or how current behavior works when you can find out.
+
+                        Make the plan decision-complete: state the goal and success criteria; group implementation changes by subsystem; identify public API, schema, and data-flow changes; cover edge cases, failure modes, tests, acceptance criteria, and explicit assumptions. Keep it concise enough to review but detailed enough that another engineer can implement it without making design decisions.
+
+                        When ready, call exit_plan_mode with the complete plan markdown, starting with a # title. Make exit_plan_mode the only and final tool call in that assistant response: it presents the plan for approval, and implementation begins only in a later step after approval. Do not paste the final plan as a plain reply or ask "should I proceed?" through prose or ask_user_question. If review rejects it, incorporate the feedback and present again. If the review channel is unavailable or aborted, stay in plan mode and ask the user to switch modes manually; do not proceed with implementation.
+
+          # ── compaction ──────────────────────────────────────────────────────────────
+
+          # `compaction-basic` reads `toolResultPrune` through `ctx.get`, so the pruner must
+          # share this realm rather than sit outside it.
+          #
+          # `tokenMeter` is deliberately NOT in this realm: the meter stays on the HOST
+          # plane, and the rows here resolve that one instance. It takes no configuration,
+          # keys every fold by Session, and owns the context-meter projection units the
+          # browser reads for every session — behind a realm those units would come and go
+          # with whichever presets happen to be mounted. What a preset chooses is whether
+          # its agent compacts at all, which is `compaction-basic` below.
+          - id: compaction
+            name: cordis:group
+            group: true
+            isolate:
+              compaction: true
+              toolResultPruner: true
+            config:
+              - id: compaction-basic
+                name: '@deepseek-ai/dsh-compaction-basic'
+
+              - id: command-compact
+                name: '@deepseek-ai/dsh-command-compact'
+
+              - id: tool-result-pruner
+                name: '@deepseek-ai/dsh-compaction-tool-result-pruner'
+                config:
+                  thresholdChars: 8192
+                  headChars: 4096
+                  tailChars: 1024
+
+          # ── delegation and workflows ────────────────────────────────────────────────
+
+          # The `subagents` registry and its spawn/fork backends live in the HOST
+          # composition: the registry is a process singleton whose cross-session queries
+          # the api-proxy serves to the browser, and a provider name may only be
+          # registered once. This preset contributes the delegation TOOLS, which resolve
+          # that host registry.
+          #
+          # `workflows` is different — nothing outside an agent reads it — so every row
+          # that reaches it shares one entry-local realm here, and a consumer left
+          # outside would resolve a host registry this preset does not populate.
+          #
+          # `tool-subagent-report` is host-plane for the same reason as the registry,
+          # not because a preset may not want it: it registers a CONTINUABLE SETUP on
+          # that singleton rather than a tool this agent calls, and the setup list is
+          # not scope-aware — one copy per mounted preset means every child gets
+          # `report` registered once per live session, which throws on the second.
+          - id: delegation
+            name: cordis:group
+            group: true
+            isolate:
+              workflowEngine: true
+            config:
+              - id: tool-subagent-control
+                name: '@deepseek-ai/dsh-tool-subagent-control'
+
+              - id: tool-subagent-list-agents
+                name: '@deepseek-ai/dsh-tool-subagent-control/list-agents'
+
+              - id: tool-subagent
+                name: '@deepseek-ai/dsh-tool-subagent'
+                config:
+                  provider: spawn
+                  toolName: subagent
+                  backgroundMode: continuable
+
+              - id: tool-subagent-fork
+                name: '@deepseek-ai/dsh-tool-subagent'
+                config:
+                  provider: fork
+                  toolName: subagent_fork
+                  backgroundMode: continuable
+
+              # Product providers are host-plane singletons. Copy this preset, then
+              # remove `disabled` from either ordinary tool row to expose that product
+              # only to agents composed from the copy.
+              - id: tool-subagent-codex
+                name: '@deepseek-ai/dsh-tool-subagent'
+                disabled: true
+                config:
+                  provider: codex
+                  toolName: subagent_codex
+                  enableRunInBackground: false
+                  maxDepth: provider-managed
+
+              - id: tool-subagent-claude-code
+                name: '@deepseek-ai/dsh-tool-subagent'
+                disabled: true
+                config:
+                  provider: claude-code
+                  toolName: subagent_claude_code
+                  enableRunInBackground: false
+                  maxDepth: provider-managed
+
+              - id: workflow-ptc
+                name: '@deepseek-ai/dsh-workflow-ptc'
+                config:
+                  provider: spawn
+
+              - id: tool-workflow
+                name: '@deepseek-ai/dsh-tool-workflow'
+
+              - id: tool-ralph
+                name: '@deepseek-ai/dsh-tool-ralph'
+                config:
+                  subagentProvider: spawn
+                  maxRounds: 64
+
+          # ── remaining model-facing rows ─────────────────────────────────────────────
+
+          - id: tool-ask-user
+            name: '@deepseek-ai/dsh-tool-ask-user'
+
+          - id: tool-todo
+            name: '@deepseek-ai/dsh-tool-todo'
+            config:
+              allowParallelInProgress: true
+
+          # The `web` service and its search provider stay in the host composition; only
+          # the model-facing tool is per-session.
+          - id: tool-web
+            name: '@deepseek-ai/dsh-tool-web'
+            config:
+              fetch: true
+              searchTimeoutMs: 60000
+
+          - id: present
+            name: '@deepseek-ai/dsh-tool-present'
