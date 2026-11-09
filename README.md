@@ -10,6 +10,10 @@
 | 小说模式 | novel | 原有小说创作规则与无工具写作配置 |
 | 逆向工程模式 | rea | 原有 REA 提示词、rea-cli 技能 |
 
+## 兼容性
+
+v1.0.1 适配 DeepSeek Harness Desktop 0.2.2-rc.1。四个开发类预设由子智能体控制插件的主入口提供 `list_agents`。使用旧版 Harness 时可保留 v1.0.0。
+
 ## 通过 GitHub 安装
 
 在官方桌面版的 **插件 → 添加插件** 中输入：
@@ -24,14 +28,14 @@ github:sundusk/dsh-agent-presets-bundle
 ## 使用本地安装包
 
 1. 安装并打开官方 DeepSeek Harness 桌面版。
-2. 把 `sundusk-dsh-agent-presets-bundle-1.0.0.tgz` 复制到目标电脑的固定目录。
-3. 打开 **插件 → 添加插件**，填入安装包在目标电脑的**完整绝对路径**，例如 macOS 上 `/Users/你的用户名/Downloads/sundusk-dsh-agent-presets-bundle-1.0.0.tgz`。Windows 使用目标电脑实际的盘符绝对路径。
+2. 把 `sundusk-dsh-agent-presets-bundle-1.0.1.tgz` 复制到目标电脑的固定目录。
+3. 打开 **插件 → 添加插件**，填入安装包在目标电脑的**完整绝对路径**，例如 macOS 上 `/Users/你的用户名/Downloads/sundusk-dsh-agent-presets-bundle-1.0.1.tgz`。Windows 使用目标电脑实际的盘符绝对路径。
 4. 安装完成后点 **立即启用**。如果提示需要重启，正常退出并重新打开 Harness。
 5. 打开新任务的 Agent 预设列表，应出现上表中的五项。
 
 不需要手工复制 Profile，也不需要手工编辑 `~/.dsh`。安装与启用由官方插件管理器执行，会正常修改目标 Profile 的依赖与 Bundle 选择。
 
-本包依赖官方 `@deepseek-ai/dsh-subagent-codex@0.2.0-rc.2`（与导出电脑一致），安装时官方管理器需要从包源下载该依赖及其传递依赖。因此这是可搬运的本地插件包，**不是完整离线安装包**。
+本包依赖官方 `@deepseek-ai/dsh-subagent-codex@0.2.2-rc.1`（与已验证的桌面版一致），安装时官方管理器需要从包源下载该依赖及其传递依赖。因此这是可搬运的本地插件包，**不是完整离线安装包**。
 
 ## 目标电脑需要具备的工具
 
